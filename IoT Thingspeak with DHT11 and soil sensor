@@ -1,0 +1,95 @@
+# Author Dr. O. ELijah
+# 6-03-2023
+# Connect Pico-w to Thingspeak IoT platform. 
+
+import machine
+import urequests 
+from machine import Pin, ADC
+import network, time
+from time import sleep
+import dht 
+
+# Thingspeak API 
+HTTP_HEADERS = {'Content-Type': 'application/json'} 
+THINGSPEAK_WRITE_API_KEY = 'RPD18SYMICHAFOGK'  
+ 
+# Wi-Fi configuration
+ssid = 'Galaxy A73 5GA010'
+password = 'step0195'
+ 
+# Configure Pico W as Station
+sta_if=network.WLAN(network.STA_IF)
+sta_if.active(True)
+ 
+if not sta_if.isconnected():
+    print('connecting to network...')
+    sta_if.connect(ssid, password)
+    while not sta_if.isconnected():
+     pass
+print('network config:', sta_if.ifconfig()) 
+
+# configure pin 
+dt11_sensor = dht.DHT11(Pin(10))
+soil = ADC(Pin(26))
+
+def read_dht11sensor():
+    try:
+        sleep(2)
+        dt11_sensor.measure()
+        temp = dt11_sensor.temperature()
+        hum = dt11_sensor.humidity()
+        temp_f = temp * (9/5) + 32.0
+        print('Temperature: %3.1f C' %temp)
+        print('Temperature: %3.1f F' %temp_f)
+        print('Humidity: %3.1f %%' %hum)
+        return([temp, hum])
+    except OSError as e:
+        print('Failed to read sensor.')
+        return ("Error")
+
+
+
+# Soil Mositure sensor 
+readDelay = 0.5 
+min_moisture=0
+max_moisture=65535
+
+def read_moisture():
+    try:
+        moisture = (max_moisture-soil.read_u16())*100/(max_moisture-min_moisture)
+        print("moisture: " + "%.2f" % moisture +"% (adc: "+str(soil.read_u16())+")")
+        sleep(readDelay)
+        
+        if moisture > 20:
+            print("moisture more than 20%")
+        return moisture
+    except OSError as e:
+        print('Failed to read sensor.')
+        return ("Error")
+
+
+while True:
+    time.sleep(15)
+    # read the temperature
+    dht11 = read_dht11sensor()
+    # read moisture
+    mois = read_moisture()
+    
+    if dht11 != "Error" and mois != "Error":
+        temperature = dht11[0]
+        humidity = dht11[1]
+        soilmoisture = mois
+        dht_readings = {'field1':temperature, 'field2':humidity, 'field3' :soilmoisture }
+        request = urequests.post( 'http://api.thingspeak.com/update?api_key=' + THINGSPEAK_WRITE_API_KEY, json = dht_readings, headers = HTTP_HEADERS )
+        request.close()
+        print(dht_readings)
+
+   
+
+    
+     
+    
+    
+    
+    
+  
