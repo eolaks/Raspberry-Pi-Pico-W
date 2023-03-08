@@ -11,11 +11,13 @@ import dht
 
 # Thingspeak API 
 HTTP_HEADERS = {'Content-Type': 'application/json'} 
-THINGSPEAK_WRITE_API_KEY = 'RPD18SYMICHAFOGK'  
+# Add your Thingspeak Write API key
+THINGSPEAK_WRITE_API_KEY = 'XXXXXXXXXX'  
  
 # Wi-Fi configuration
-ssid = 'Galaxy A73 5GA010'
-password = 'step0195'
+# add your Wi-Fi name and password 
+ssid = 'XXXXXXXX'
+password = 'XXXXXXXX'
  
 # Configure Pico W as Station
 sta_if=network.WLAN(network.STA_IF)
